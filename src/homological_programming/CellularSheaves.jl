@@ -145,14 +145,23 @@ function parse_cellular_sheaf(expr::Expr)
             ::LineNumberNode => missing
             # May accept tuple of variable declarations
             Expr(:tuple, declarations...) => parse_declaration_list(declarations)
+            # May accept types defined per each line
             Expr(:(::), a::Symbol, b::Expr) => parse_declaration(a, b)
-            _::Symbol => parse_declaration(a)
+            a::Symbol => parse_declaration(a)
+
+            # Accepts linear relations after declarations
+            Expr(:call, :(=), lhs, rhs) => # Impliment Equations
         end
     end
 end
 
 function parse_declaration_list(declarations::Tuple{Expr}) begin
-    # To Impliment
+    declaration_list = map(declarations) do declaration
+        @match declaration
+            Expr(:(::), a::Symbol, b::Expr) => parse_declaration(a, b)
+            a::Symbol => parse_declaration(a)
+        end
+    end
 end
 
 function parse_declaration(name::Symbol, type::Expr) begin
