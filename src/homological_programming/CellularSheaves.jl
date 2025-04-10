@@ -1,7 +1,7 @@
 module CellularSheaves
 
 export AbstractCellularSheaf, CellularSheaf, PotentialSheaf, nearest_section, set_edge_maps!, Laplacian, apply_Laplacian, coboundary_map, apply_coboundary_map,
-    potential_objective
+    potential_objective, @cellular_sheaf
 
 using BlockArrays
 using SparseArrays
@@ -10,6 +10,7 @@ using Krylov
 using LinearAlgebra
 using Graphs
 using ForwardDiff
+using MLStyle: @match 
 
 abstract type AbstractCellularSheaf end
 
@@ -140,36 +141,43 @@ end
 
 function parse_cellular_sheaf(expr::Expr)
     stmts = map(expr.args) do line
+        # DEBUG
+        print("Line: $(dump(line))\n")
         @match line begin
             # Filter unneeded line metadata
             ::LineNumberNode => missing
             # May accept tuple of variable declarations
-            Expr(:tuple, declarations...) => parse_declaration_list(declarations)
+            Expr(:tuple, args...) => parse_declaration_list(Vector(args))
             # May accept types defined per each line
             Expr(:(::), a::Symbol, b::Expr) => parse_declaration(a, b)
             a::Symbol => parse_declaration(a)
+            _ => throw("Equations not yet added")
 
             # Accepts linear relations after declarations
-            Expr(:call, :(=), lhs, rhs) => # Impliment Equations
+            # Expr(:call, :(=), lhs, rhs) => # Impliment Equations
         end
     end
+
+    # DEBUG 
+    print("Statements: $stmts")
 end
 
-function parse_declaration_list(declarations::Tuple{Expr}) begin
+function parse_declaration_list(declarations::Vector{Any})
     declaration_list = map(declarations) do declaration
-        @match declaration
+        @match declaration begin
             Expr(:(::), a::Symbol, b::Expr) => parse_declaration(a, b)
             a::Symbol => parse_declaration(a)
+            _ => throw("Incorrect Declaration")
         end
     end
 end
 
-function parse_declaration(name::Symbol, type::Expr) begin
-    # To Impliment
+function parse_declaration(name::Symbol, type::Expr)
+    print("Parses Declaration w/ type\n")
 end
 
-function parse_declaration(name::Symbol) begin
-    # To Impliment
+function parse_declaration(name::Symbol)
+    print("Parses Declaration w/o type\n")
 end
 
-end
+end 
