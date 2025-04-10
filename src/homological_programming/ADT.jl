@@ -32,6 +32,32 @@ using StructTypes
 
 abstract type AbstractTerm end
 
+""" Restriction Map 
+
+This is the child node of Produuct and represents the restriction map "A" in a product "Ax".
+"""
+struct restriction_map <: AbstractTerm
+    name::Symbol
+    matrix::Matrix
+end
+
+StructTypes.StructType(::Type{restriction_map}) = StructTypes.AbstractType()
+StructTypes.subtypekey(::Type{restriction_map}) = :_type
+StructTypes.subtypes(::Type{restriction_map}) = (restriction_map=restriction_map)
+
+""" Vertex Stalk
+
+This is the child node of Produuct and represents the vertex stalk "x" in a product "Ax".
+"""
+struct vertex_stalk <: AbstractTerm
+    name::Symbol
+    dim::Symbol
+end
+
+StructTypes.StructType(::Type{vertex_stalk}) = StructTypes.AbstractType()
+StructTypes.subtypekey(::Type{vertex_stalk}) = :_type
+StructTypes.subtypes(::Type{vertex_stalk}) = (vertex_stalk=vertex_stalk)
+
 @doc """ Product
 
 A product is a child node of Equation. It contains the prodct between a 
@@ -41,13 +67,12 @@ restriction map "A" and vertex stalk "x".
 Product
 
 @data Product <: AbstractTerm begin
-    restriction_map(name::Symbol, matrix::Matrix)
-    vertex_stalks(name::Symbol, dim::Symbol)
+    Prod(restriction_map::restriction_map, vertex_stalk::vertex_stalk)
 end
 
 StructTypes.StructType(::Type{Product}) = StructTypes.AbstractType()
 StructTypes.subtypekey(::Type{Product}) = :_type
-StructTypes.subtypes(::Type{Product}) = (restriction_map=restriction_map, vertex_stalks=vertex_stalks)
+StructTypes.subtypes(::Type{Product}) = (Prod=Prod)
 
 @doc """ TypeName
 

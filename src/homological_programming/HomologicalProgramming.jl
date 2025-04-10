@@ -8,6 +8,7 @@ include("CellularSheaves.jl")
 #include("DistributedSheaves.jl")
 #include("ThreadedSheaves.jl")
 include("HomologicalPrograms.jl")
+include("ADT.jl")
 
 @reexport using .MPC
 @reexport using .CellularSheaves
@@ -15,5 +16,6 @@ include("HomologicalPrograms.jl")
 #@reexport using .DistributedSheaves
 #@reexport using .ThreadedSheaves
 @reexport using .HomologicalPrograms
+using .CellularSheafAST
 
 end
