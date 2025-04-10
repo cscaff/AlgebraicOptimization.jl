@@ -140,8 +140,27 @@ end
 
 function parse_cellular_sheaf(expr::Expr)
     stmts = map(expr.args) do line
-        
+        @match line begin
+            # Filter unneeded line metadata
+            ::LineNumberNode => missing
+            # May accept tuple of variable declarations
+            Expr(:tuple, declarations...) => parse_declaration_list(declarations)
+            Expr(:(::), a::Symbol, b::Expr) => parse_declaration(a, b)
+            _::Symbol => parse_declaration(a)
+        end
     end
+end
+
+function parse_declaration_list(declarations::Tuple{Expr}) begin
+    # To Impliment
+end
+
+function parse_declaration(name::Symbol, type::Expr) begin
+    # To Impliment
+end
+
+function parse_declaration(name::Symbol) begin
+    # To Impliment
 end
 
 end
