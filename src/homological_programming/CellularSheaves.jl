@@ -130,5 +130,18 @@ struct ThreadedSheaf <: AbstractCellularSheaf
 
 end
 
+""" macro cellular_sheaf(e)
+
+Constructs a cellular sheaf using a language of linear relations.
+"""
+macro cellular_sheaf(e)
+    :(parse_cellular_sheaf($(Meta.quot(e))))
+end
+
+function parse_cellular_sheaf(expr::Expr)
+    stmts = map(expr.args) do line
+        
+    end
+end
 
 end
