@@ -27,12 +27,12 @@ a shared edge stalk.
 """
 module CellularSheafAST
 
-using MLStyle
+using MLStyle: @data
 using StructTypes
 
 abstract type AbstractTerm end
 
-@docs """ Product
+@doc """ Product
 
 A product is a child node of Equation. It contains the prodct between a 
 restriction map "A" and vertex stalk "x".
@@ -49,7 +49,7 @@ StructTypes.StructType(::Type{Product}) = StructTypes.AbstractType()
 StructTypes.subtypekey(::Type{Product}) = :_type
 StructTypes.subtypes(::Type{Product}) = (restriction_map=restriction_map, vertex_stalks=vertex_stalks)
 
-@docs """ TypeName
+@doc """ TypeName
 
 A type name is the child node of a judgement. It contains the type annotation for the 
 variable being declared. For instance if variable "A" is a restriction map, we might see:
@@ -58,7 +58,7 @@ variable being declared. For instance if variable "A" is a restriction map, we m
 """
 TypeName
 
-@data TypeName <: AbstractTerm begin
+@data TypeAnnotation <: AbstractTerm begin
     TypeName(name::Symbol, dim::Symbol)
 end
 
@@ -83,8 +83,6 @@ StructTypes.StructType(::Type{Equation}) = StructTypes.AbstractType()
 StructTypes.subtypekey(::Type{Equation}) = :_type
 StructTypes.subtypes(::Type{Equation}) = (Equation=Equation)
 
-end
-
 @doc """ Judgement
 
 A judgement is a child node of a context node. It represents a variable declaration in our language.
@@ -96,7 +94,7 @@ Judgement
 
 @data Judgement <: AbstractTerm begin
     untyped_var(name::Symbol)
-    typed_var(name::Symbol, type::TypeName)  
+    typed_var(name::Symbol, type::TypeAnnotation)  
 end
 
 StructTypes.StructType(::Type{Judgement}) = StructTypes.AbstractType()
@@ -118,4 +116,6 @@ end
 
 StructTypes.StructType(::Type{CellularSheafTerm}) = StructTypes.AbstractType()
 StructTypes.subtypekey(::Type{CellularSheafTerm}) = :_type
-StructTypes.subtypes(::Type{UWDTerm}) = (SheafExpr=SheafExpr)
+StructTypes.subtypes(::Type{CellularSheafTerm}) = (SheafExpr=SheafExpr)
+
+end
