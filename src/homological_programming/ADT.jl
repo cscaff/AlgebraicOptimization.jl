@@ -179,7 +179,11 @@ function construct(expr::CellularSheafExpr)
             end
         else
             print("lhs map size: $(size(rm_lhs.matrix)[2]), lhs dim: $(vs_lhs.dim)\nrhs map size: $(size(rm_rhs.matrix)[2]), rhs dim: $(vs_rhs.dim)")
-            error("")
+            if size(rm_lhs.matrix)[2] != vs_lhs.dim
+                error("Left restriction map (Size: $(size(rm_lhs.matrix))) cannot map left vertex stalk (Dimension: $(vs_lhs.dim)).")
+            else
+                error("Right restriction map (Size: $(size(rm_rhs.matrix))) cannot map right vertex stalk (Dimension: $(vs_rhs.dim)).")
+            end
         end
     end
 end
