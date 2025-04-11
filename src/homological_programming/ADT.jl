@@ -138,7 +138,28 @@ function construct(expr::CellularSheafExpr)
             look_up_table[name] = judgement
         end
     end
-    expr
+    
+    # Check that system of linear relations are well defined:
+    # - Two Credentials:
+    #   - Variables declared
+    #   - Inferred edge stalk is consistent per incident restriction map + vertex stalks 
+    for eq in expr.equations
+        # Extract map & vertex names
+        eq_vars = [eq.lhs.restriction_map.name, eq.lhs.vertex_stalk.name, eq.rhs.restriction_map.name,  eq.rhs.vertex_stalk.name]
+
+        # Assert declarations for four variables: O(1)
+        for var in eq_vars
+            assert_variable_definition(var, eq_vars[1], eq_vars[2], eq_vars[3], eq_vars[4], look_up_table)
+        end
+
+        # Infers edge stalk and asserts consistencies with vertex stalks and restriction maps 
+    end
+end
+
+function assert_variable_definition(name::Symbol, map_lhs::Symbol, vertex_lhs::Symbol, map_rhs::Symbol, vertex_rhs::Symbol, table::Dict{Symbol, Judgement})
+    if !haskey(table, name)
+        error("Restriction map \"$name\" in \"", map_lhs, vertex_lhs, " = ", map_rhs, vertex_rhs, "\" is undefined.")
+    end
 end
 
 

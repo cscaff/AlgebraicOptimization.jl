@@ -48,8 +48,15 @@ EQ3 = Equation(Cz, Ax)
 triangularSheaf = CellularSheafExpr([A, B, C, x, y, z], [EQ1 ,EQ2, EQ3])
 
 # Testing no duplicate variables!
-triangularSheaf = CellularSheafExpr([A, A, B, C, x, y, z], [EQ1 ,EQ2, EQ3])
-@test_throws ErrorException("Variable: \"A\" has already been declared.") construct(triangularSheaf)
+triangularSheafDuplicate = CellularSheafExpr([A, A, B, C, x, y, z], [EQ1 ,EQ2, EQ3])
+@test_throws ErrorException("Variable: \"A\" has already been declared.") construct(triangularSheafDuplicate)
 
+# Testing undeclared variable in equation
+R_rm = restrictionMap(Symbol("R"), [1 0 0 0])
+x_stalk = vertexStalk(Symbol("x"), Symbol("4"))
+Rx = Product(R_rm, x_stalk)
+EQ_undefined = Equation(Rx, By)
+triangularSheafUndeclared = CellularSheafExpr([A, B, C, x, y, z], [EQ_undefined ,EQ2, EQ3])
+construct(triangularSheafUndeclared)
 
 end
