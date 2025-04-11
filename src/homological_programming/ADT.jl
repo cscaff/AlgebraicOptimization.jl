@@ -38,7 +38,7 @@ This is the child node of Produuct and represents the restriction map "A" in a p
 """
 struct restrictionMap <: AbstractTerm
     name::Symbol
-    matrix::Matrix
+    matrix::Matrix{Any}
 end
 
 """ Vertex Stalk
@@ -115,4 +115,29 @@ struct CellularSheafExpr <: AbstractTerm
     equations::Vector{Equation}
 end
 
+""" construct(expr::CellularSheafExpr)
+
+ TO DO 
+"""
+function construct(expr::CellularSheafExpr)
+    # Check variable declarations
+
+    # Generate Variable Look Up Table
+    look_up_table = Dict{Symbol, Judgement}()
+
+    for judgement in expr.context
+        name =  @match judgement
+            untypedVar(name) => name
+            typedVar(name, _) => name
+        end
+
+        # Assert no variable redeclarations
+        if haskey(look_up_table, name)
+            error("Variable: \"$name\" has already been declared.")
+        else
+            look_up_table[name] = judgement
+        end
+    end
+
+    
 end

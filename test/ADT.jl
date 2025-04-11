@@ -27,6 +27,7 @@ A_rm = restrictionMap(Symbol("A"), [1 0 0 0])
 B_rm = restrictionMap(Symbol("B"), [1 0 0 0])
 C_rm = restrictionMap(Symbol("C"), [1 0 0 0])
 
+
 # Vertex Stalks
 x_stalk = vertexStalk(Symbol("x"), Symbol("4"))
 y_stalk = vertexStalk(Symbol("y"), Symbol("4"))
@@ -44,6 +45,6 @@ EQ3 = Equation(Cz, Ax)
 
 ### CellularSheafExpr
 
-triangularSheaf = CellularSheafExpr([A, B, C, x, y, z],[EQ1 ,EQ2, EQ3])
+triangularSheaf = CellularSheafExpr([A, B, C, x, y, z], [EQ1 ,EQ2, EQ3])
 
 end
