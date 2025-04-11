@@ -14,7 +14,7 @@ B = untypedVar(Symbol("B"))
 C = untypedVar(Symbol("C"))
 
 # Stalks
-generic_type = TypeName(Symbol("Stalk"), Symbol("4"))
+generic_type = TypeName(Symbol("Stalk"), 4)
 
 x = typedVar(Symbol("x"), generic_type)
 y = typedVar(Symbol("y"), generic_type)
@@ -69,8 +69,10 @@ By = Product(B_rm, y_stalk)
 EQ_inconsistent = Equation(Ax, By)
 
 triangularSheafInconsistent = CellularSheafExpr([A, B, C, x, y, z], [EQ_inconsistent ,EQ2, EQ3])
-construct(triangularSheafInconsistent)
-
-
+@test_throws ErrorException(
+    """Inferred edge stalk on relation: "Ax = By" is inconsistent.
+        Left restriction map maps dimension 4 to dimension 1.
+        Right restriction map maps dimension 4 to dimension 2.
+    """) construct(triangularSheafInconsistent)
 
 end

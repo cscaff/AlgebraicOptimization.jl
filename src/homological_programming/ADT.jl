@@ -170,9 +170,12 @@ function construct(expr::CellularSheafExpr)
                 # DEBUG
                 print("Edge Stalk is $(size(rm_lhs.matrix)[1])")
             else
-                error("Inferred edge stalk on relation: \"", rm_lhs.name, vs_lhs.name, " = ", rm_rhs.name, vs_rhs.namem, "\" is inconsistent.\n
-                Left restriction map maps dimension $(size(rm_lhs.matrix)[2]) to dimension $(size(rm_lhs.matrix)[1]).\n Right restriction map
-                maps dimension $(size(rm_rhs.matrix)[2]) to dimension $(size(rm_rhs.matrix)[1]).")
+                error(
+                """Inferred edge stalk on relation: "$(rm_lhs.name)$(vs_lhs.name) = $(rm_rhs.name)$(vs_rhs.name)" is inconsistent.
+                    Left restriction map maps dimension $(size(rm_lhs.matrix)[2]) to dimension $(size(rm_lhs.matrix)[1]).
+                    Right restriction map maps dimension $(size(rm_rhs.matrix)[2]) to dimension $(size(rm_rhs.matrix)[1]).
+                """
+                    )
             end
         else
             print("lhs map size: $(size(rm_lhs.matrix)[2]), lhs dim: $(vs_lhs.dim)\nrhs map size: $(size(rm_rhs.matrix)[2]), rhs dim: $(vs_rhs.dim)")
