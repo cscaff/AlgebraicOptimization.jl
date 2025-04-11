@@ -139,15 +139,18 @@ function construct(expr::CellularSheafExpr)
         end
     end
     
+    # Gathers vertex & edge stalk arrays
+    type_name(j::Judgement) = @match j begin
+        typedVar(name, type) => type.name
+        untypedVar(name) => nothing
+    end
+
+    vertex_dims = [j.type.dim for j in expr.context if type_name(j) == :Stalk]
+    
     # Check that system of linear relations are well defined:
     # - Two Credentials:
     #   - Variables declared
     #   - Inferred edge stalk is consistent per incident restriction map + vertex stalks 
-    # Gathers vertex & edge stalk arrays
-
-    vertex_dims = []
-    edge_dims = []
-
     for eq in expr.equations
         # Extract map & vertices
         rm_lhs = eq.lhs.restriction_map
@@ -174,8 +177,7 @@ function construct(expr::CellularSheafExpr)
                 """Inferred edge stalk on relation: "$(rm_lhs.name)$(vs_lhs.name) = $(rm_rhs.name)$(vs_rhs.name)" is inconsistent.
                     Left restriction map maps dimension $(size(rm_lhs.matrix)[2]) to dimension $(size(rm_lhs.matrix)[1]).
                     Right restriction map maps dimension $(size(rm_rhs.matrix)[2]) to dimension $(size(rm_rhs.matrix)[1]).
-                """
-                    )
+                """)
             end
         else
             if size(rm_lhs.matrix)[2] != vs_lhs.dim

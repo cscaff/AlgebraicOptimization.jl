@@ -84,4 +84,7 @@ EQ_bad_map = Equation(Ax, By)
 
 triangularSheafWrongMapping = CellularSheafExpr([A, B, C, x, y, z], [EQ_bad_map ,EQ2, EQ3])
 @test_throws ErrorException("Right restriction map (Size: (1, 3)) cannot map right vertex stalk (Dimension: 4).") construct(triangularSheafWrongMapping)
+
+# DEBUG
+construct(triangularSheaf)
 end
