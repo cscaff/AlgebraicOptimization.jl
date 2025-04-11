@@ -29,6 +29,7 @@ module CellularSheafTerm
 
 using MLStyle: @data, @match
 using StructTypes
+using ..CellularSheaves
 
 abstract type AbstractTerm end
 
@@ -146,8 +147,8 @@ function construct(expr::CellularSheafExpr)
     # - Two Credentials:
     #   - Variables declared
     #   - Inferred edge stalk is consistent per incident restriction map + vertex stalks 
-    # Gather edge stalk dimension
-    edge_dims = []
+    # AND Gather edge stalk dimension
+    edge_dims = Vector{Int}()
 
     for eq in expr.equations
         # Extract map & vertices
@@ -184,8 +185,9 @@ function construct(expr::CellularSheafExpr)
             end
         end
     end
-   # DEBUG
-   print("VERTEX STALKS: $vertex_dims\nEDGE STALKS: $edge_dims") 
+
+   # Construct Cellular Sheaf
+   c = CellularSheaf(vertex_dims, edge_dims)
 end
 
 function assert_variable_definition(name::Symbol, map_lhs::Symbol, vertex_lhs::Symbol, map_rhs::Symbol, vertex_rhs::Symbol, table::Dict{Symbol, Judgement})
