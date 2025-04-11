@@ -47,7 +47,7 @@ This is the child node of Produuct and represents the vertex stalk "x" in a prod
 """
 struct vertexStalk <: AbstractTerm
     name::Symbol
-    dim::Symbol
+    dim::Int
 end
 
 """ Product
@@ -70,7 +70,7 @@ variable being declared. For instance if variable "A" is a restriction map, we m
 """
 struct TypeName <: AbstractTerm
     name::Symbol
-    dim::Symbol
+    dim::Int
 end
 
 """ Equation
@@ -143,9 +143,19 @@ function construct(expr::CellularSheafExpr)
     # - Two Credentials:
     #   - Variables declared
     #   - Inferred edge stalk is consistent per incident restriction map + vertex stalks 
+    # Gathers vertex & edge stalk arrays
+
+    vertex_dims = []
+    edge_dims = []
+
     for eq in expr.equations
-        # Extract map & vertex names
-        eq_vars = [eq.lhs.restriction_map.name, eq.lhs.vertex_stalk.name, eq.rhs.restriction_map.name,  eq.rhs.vertex_stalk.name]
+        # Extract map & vertices
+        rm_lhs = eq.lhs.restriction_map
+        rm_rhs = eq.rhs.restriction_map
+        vs_lhs = eq.lhs.vertex_stalk
+        vs_rhs = eq.rhs.vertex_stalk
+
+        eq_vars = [rm_lhs.name, vs_lhs.name, rm_rhs.name,  vs_rhs.name]
 
         # Assert declarations for four variables: O(1)
         for var in eq_vars
@@ -153,6 +163,21 @@ function construct(expr::CellularSheafExpr)
         end
 
         # Infers edge stalk and asserts consistencies with vertex stalks and restriction maps 
+
+        # Ensure restriction map can be multiplied by vertex stalk
+        if (size(rm_lhs.matrix)[2] == vs_lhs.dim) && (size(rm_rhs.matrix)[2] == vs_rhs.dim)
+            if size(rm_lhs.matrix)[1] == size(rm_rhs.matrix)[1]
+                # DEBUG
+                print("Edge Stalk is $(size(rm_lhs.matrix)[1])")
+            else
+                error("Inferred edge stalk on relation: \"", rm_lhs.name, vs_lhs.name, " = ", rm_rhs.name, vs_rhs.namem, "\" is inconsistent.\n
+                Left restriction map maps dimension $(size(rm_lhs.matrix)[2]) to dimension $(size(rm_lhs.matrix)[1]).\n Right restriction map
+                maps dimension $(size(rm_rhs.matrix)[2]) to dimension $(size(rm_rhs.matrix)[1]).")
+            end
+        else
+            print("lhs map size: $(size(rm_lhs.matrix)[2]), lhs dim: $(vs_lhs.dim)\nrhs map size: $(size(rm_rhs.matrix)[2]), rhs dim: $(vs_rhs.dim)")
+            error("")
+        end
     end
 end
 
@@ -161,6 +186,7 @@ function assert_variable_definition(name::Symbol, map_lhs::Symbol, vertex_lhs::S
         error("Restriction map \"$name\" in \"", map_lhs, vertex_lhs, " = ", map_rhs, vertex_rhs, "\" is undefined.")
     end
 end
+
 
 
 end

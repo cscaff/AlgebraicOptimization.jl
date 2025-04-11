@@ -29,9 +29,9 @@ C_rm = restrictionMap(Symbol("C"), [1 0 0 0])
 
 
 # Vertex Stalks
-x_stalk = vertexStalk(Symbol("x"), Symbol("4"))
-y_stalk = vertexStalk(Symbol("y"), Symbol("4"))
-z_stalk = vertexStalk(Symbol("z"), Symbol("4"))
+x_stalk = vertexStalk(Symbol("x"), 4)
+y_stalk = vertexStalk(Symbol("y"), 4)
+z_stalk = vertexStalk(Symbol("z"), 4)
 
 Ax = Product(A_rm, x_stalk)
 By = Product(B_rm, y_stalk)
@@ -53,12 +53,24 @@ triangularSheafDuplicate = CellularSheafExpr([A, A, B, C, x, y, z], [EQ1 ,EQ2, E
 
 # Testing undeclared variable in equation
 R_rm = restrictionMap(Symbol("R"), [1 0 0 0])
-x_stalk = vertexStalk(Symbol("x"), Symbol("4"))
+x_stalk = vertexStalk(Symbol("x"), 4)
 
 Rx = Product(R_rm, x_stalk)
 EQ_undefined = Equation(Rx, By)
 
 triangularSheafUndeclared = CellularSheafExpr([A, B, C, x, y, z], [EQ_undefined ,EQ2, EQ3])
 @test_throws ErrorException("Restriction map \"R\" in \"Rx = By\" is undefined.") construct(triangularSheafUndeclared)
+
+# Test inconsistent edge stalk inferred from bad restriction maps
+B_rm = restrictionMap(Symbol("B"), [1 0 0 0; 0 0 0 1])
+y_stalk = vertexStalk(Symbol("y"), 4)
+
+By = Product(B_rm, y_stalk)
+EQ_inconsistent = Equation(Ax, By)
+
+triangularSheafInconsistent = CellularSheafExpr([A, B, C, x, y, z], [EQ_inconsistent ,EQ2, EQ3])
+construct(triangularSheafInconsistent)
+
+
 
 end
