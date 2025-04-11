@@ -16,6 +16,6 @@ include("ADT.jl")
 #@reexport using .DistributedSheaves
 #@reexport using .ThreadedSheaves
 @reexport using .HomologicalPrograms
-using .CellularSheafAST
+using .CellularSheafTerm
 
 end
