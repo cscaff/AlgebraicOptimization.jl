@@ -27,7 +27,7 @@ a shared edge stalk.
 """
 module CellularSheafTerm
 
-using MLStyle: @data
+using MLStyle: @data, @match
 using StructTypes
 
 abstract type AbstractTerm end
@@ -126,7 +126,7 @@ function construct(expr::CellularSheafExpr)
     look_up_table = Dict{Symbol, Judgement}()
 
     for judgement in expr.context
-        name =  @match judgement
+        name =  @match judgement begin
             untypedVar(name) => name
             typedVar(name, _) => name
         end
@@ -138,6 +138,8 @@ function construct(expr::CellularSheafExpr)
             look_up_table[name] = judgement
         end
     end
+    expr
+end
 
-    
+
 end

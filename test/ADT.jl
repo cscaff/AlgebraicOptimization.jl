@@ -2,7 +2,7 @@ module TestADT
 
 using Test
 using AlgebraicOptimization.HomologicalProgramming.CellularSheafTerm: 
-    restrictionMap, vertexStalk, TypeName, Product, Equation, untypedVar, typedVar, CellularSheafExpr
+    restrictionMap, vertexStalk, TypeName, Product, Equation, untypedVar, typedVar, CellularSheafExpr, construct
 
 # Let's prove that the current AST properly represents a cellular sheaf
 
@@ -46,5 +46,10 @@ EQ3 = Equation(Cz, Ax)
 ### CellularSheafExpr
 
 triangularSheaf = CellularSheafExpr([A, B, C, x, y, z], [EQ1 ,EQ2, EQ3])
+
+# Testing no duplicate variables!
+triangularSheaf = CellularSheafExpr([A, A, B, C, x, y, z], [EQ1 ,EQ2, EQ3])
+@test_throws ErrorException("Variable: \"A\" has already been declared.") construct(triangularSheaf)
+
 
 end
