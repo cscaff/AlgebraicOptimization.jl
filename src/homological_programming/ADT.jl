@@ -141,14 +141,23 @@ function construct(expr::CellularSheafExpr)
     end
     
     # Gathers vertex stalk array
-    vertex_dims = [j.type.dim for j in expr.context if type_name(j) == :Stalk]
+    vertex_dims = Int[] 
+    vertex_to_index = Dict{Symbol, Int}() # Store array locations for later edge mapping
+    
+    for j in expr.context
+        if type_name(j) == :Stalk
+            push!(vertex_dims, j.type.dim)
+            vertex_to_index[j.name] = length(vertex_dims)
+        end
+    end
 
     # Check that system of linear relations are well defined:
     # - Two Credentials:
     #   - Variables declared
     #   - Inferred edge stalk is consistent per incident restriction map + vertex stalks 
     # AND Gather edge stalk dimension
-    edge_dims = Vector{Int}()
+    edge_to_index = Dict{Equation, Int}() # Store array locations for later edge mapping
+    edge_dims = Int[]
 
     for eq in expr.equations
         # Extract map & vertices
@@ -169,7 +178,8 @@ function construct(expr::CellularSheafExpr)
         # Ensure restriction map can be multiplied by vertex stalk
         if (size(rm_lhs.matrix)[2] == vs_lhs.dim) && (size(rm_rhs.matrix)[2] == vs_rhs.dim)
             if size(rm_lhs.matrix)[1] == size(rm_rhs.matrix)[1]
-                append!(edge_dims, size(rm_lhs.matrix)[1])
+                push!(edge_dims, size(rm_lhs.matrix)[1])
+                edge_to_index[eq] = length(edge_dims)
             else
                 error(
                 """Inferred edge stalk on relation: "$(rm_lhs.name)$(vs_lhs.name) = $(rm_rhs.name)$(vs_rhs.name)" is inconsistent.
@@ -188,6 +198,12 @@ function construct(expr::CellularSheafExpr)
 
    # Construct Cellular Sheaf
    c = CellularSheaf(vertex_dims, edge_dims)
+
+   # Construct edge maps
+   for eq in expr.equations
+       set_edge_maps!(c, vertex_to_index[eq.lhs.vertex_stalk.name], vertex_to_index[eq.rhs.vertex_stalk.name], edge_to_index[eq], eq.lhs.restriction_map.matrix, eq.rhs.restriction_map.matrix)
+       # Ax = By
+   end
 end
 
 function assert_variable_definition(name::Symbol, map_lhs::Symbol, vertex_lhs::Symbol, map_rhs::Symbol, vertex_rhs::Symbol, table::Dict{Symbol, Judgement})
