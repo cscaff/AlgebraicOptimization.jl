@@ -132,21 +132,24 @@ struct ThreadedSheaf <: AbstractCellularSheaf
 
 end
 
+
 """ macro cellular_sheaf(e)
 
 Constructs a cellular sheaf using a language of linear relations.
 """
 macro cellular_sheaf(expr...)
     local_vars = expr[1:end - 1] # Get local vars passed in as parameters
-    esc_vars = esc.(local_vars)
-
     block = expr[end] # Get macro code
 
-    return :(parse_cellular_sheaf(($(esc_vars...),), $(Meta.quot(block))))
+    # Escape the values and preserve the names as symbols
+    esc_vals = esc.(local_vars)
+    names = QuoteNode.(local_vars)
+
+    return :(parse_cellular_sheaf(($(esc_vals...),), ($(names...),), $(Meta.quot(block))))
 
 end
 
-function parse_cellular_sheaf(local_vars::Tuple{Matrix{Int64}}, block::Expr)
+function parse_cellular_sheaf(local_vals::Tuple{Matrix{Int64}}, local_names::Tuple{Symbol}, block::Expr)
     stmts = map(block.args) do line
         @match line begin
             # Filter unneeded line metadata
