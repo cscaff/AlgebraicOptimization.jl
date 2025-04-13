@@ -64,7 +64,7 @@ end
 
 """ TypeName
 
-A type name is the child node of a judgement. It contains the type annotation for the 
+A type name is the child node of a declaration. It contains the type annotation for the 
 variable being declared. For instance if variable "A" is a restriction map, we might see:
 "A::Map" or if "x" is a vertex stalk, we might see the type and dimension: "x::stalk{1}".
 
@@ -86,33 +86,34 @@ struct Equation <: AbstractTerm
     rhs::Product
 end
 
-@doc """ Judgement
+@doc """ Declaration
 
-A judgement is a child node of a context node. It represents a variable declaration in our language.
+A declaration is a child node of a context node. It represents a variable declaration in our language.
 A declaration can be typed "A::map" or untyped "A" in the situation we are already passed a restriction
 map that is inferred.
 
 """
-Judgement
+Declaration
 
-@data Judgement <: AbstractTerm begin
-    untypedVar(name::Symbol)
-    typedVar(name::Symbol, type::TypeName)  
+@data Declaration <: AbstractTerm begin
+    untypedDeclaration(name::Symbol, val::Union{Matrix, Nothing})
+    typedDeclaration(name::Symbol, type::TypeName, val::Union{Matrix, Nothing})  
 end
+# The only declaration that carries a value is a restriction map w/ a matrix value.
 
-StructTypes.StructType(::Type{Judgement}) = StructTypes.AbstractType()
-StructTypes.subtypekey(::Type{Judgement}) = :_type
-StructTypes.subtypes(::Type{Judgement}) = (untyped_var=untyped_var, typed_var=typed_var)
+StructTypes.StructType(::Type{Declaration}) = StructTypes.AbstractType()
+StructTypes.subtypekey(::Type{Declaration}) = :_type
+StructTypes.subtypes(::Type{Declaration}) = (untypedDeclaration=untypedDeclaration, typedDeclaration=typedDeclaration)
 
 """ CellularSheafExpr
 
 A cellular sheaf term represents the root node in our AST. It contains two child nodes:
-- Context (A list of judgements)
+- Context (A list of declarations)
 - Equations (A list of equations)
 
 """
 struct CellularSheafExpr <: AbstractTerm
-    context::Vector{Judgement}
+    context::Vector{Declaration}
     equations::Vector{Equation}
 end
 
@@ -124,19 +125,19 @@ function construct(expr::CellularSheafExpr)
     # Check variable declarations
 
     # Generate Variable Look Up Table
-    look_up_table = Dict{Symbol, Judgement}()
+    look_up_table = Dict{Symbol, Declaration}()
 
-    for judgement in expr.context
-        name =  @match judgement begin
-            untypedVar(name) => name
-            typedVar(name, _) => name
+    for declaration in expr.context
+        name =  @match declaration begin
+            untypedDeclaration(name, _) => name
+            typedDeclaration(name, _, _) => name
         end
 
         # Assert no variable redeclarations
         if haskey(look_up_table, name)
             error("Variable: \"$name\" has already been declared.")
         else
-            look_up_table[name] = judgement
+            look_up_table[name] = declaration
         end
     end
     
@@ -206,16 +207,16 @@ function construct(expr::CellularSheafExpr)
    end
 end
 
-function assert_variable_definition(name::Symbol, map_lhs::Symbol, vertex_lhs::Symbol, map_rhs::Symbol, vertex_rhs::Symbol, table::Dict{Symbol, Judgement})
+function assert_variable_definition(name::Symbol, map_lhs::Symbol, vertex_lhs::Symbol, map_rhs::Symbol, vertex_rhs::Symbol, table::Dict{Symbol, Declaration})
     if !haskey(table, name)
         error("Restriction map \"$name\" in \"", map_lhs, vertex_lhs, " = ", map_rhs, vertex_rhs, "\" is undefined.")
     end
 end
 
-function type_name(j::Judgement)
+function type_name(j::Declaration)
     @match j begin
-        typedVar(name, type) => type.name
-        untypedVar(name) => nothing
+        typedDeclaration(name, type, _) => type.name
+        untypedDeclaration(name, _) => nothing
     end
 end
 

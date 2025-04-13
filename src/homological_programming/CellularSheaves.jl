@@ -135,57 +135,57 @@ end
 
 Constructs a cellular sheaf using a language of linear relations.
 """
-macro cellular_sheaf(e)
-    :(parse_cellular_sheaf($(Meta.quot(e))))
-end
+# macro cellular_sheaf(e)
+#     :(parse_cellular_sheaf($(Meta.quot(e))))
+# end
 
-function parse_cellular_sheaf(expr::Expr)
-    stmts = map(expr.args) do line
-        # DEBUG
-        print("Line: $(dump(line))\n")
-        @match line begin
-            # Filter unneeded line metadata
-            ::LineNumberNode => missing
-            # May accept tuple of variable declarations
-            Expr(:tuple, args...) => parse_declaration_list(Vector(args))
-            # May accept types defined per each line
-            Expr(:(::), a::Symbol, b::Expr) => parse_declaration(a, b)
-            a::Symbol => parse_declaration(a)
-            _ => throw("Equations not yet added")
+# function parse_cellular_sheaf(expr::Expr)
+#     stmts = map(expr.args) do line
+#         # DEBUG
+#         print("Line: $(dump(line))\n")
+#         @match line begin
+#             # Filter unneeded line metadata
+#             ::LineNumberNode => missing
+#             # May accept tuple of variable declarations
+#             Expr(:tuple, args...) => parse_declaration_list(Vector(args))
+#             # May accept types defined per each line
+#             Expr(:(::), a::Symbol, b::Expr) => parse_declaration(a, b)
+#             a::Symbol => parse_declaration(a)
+#             _ => throw("Equations not yet added")
 
-            # Accepts linear relations after declarations
-            # Expr(:call, :(=), lhs, rhs) => # Impliment Equations
-        end
-    end
+#             # Accepts linear relations after declarations
+#             # Expr(:call, :(=), lhs, rhs) => # Impliment Equations
+#         end
+#     end
 
-    # DEBUG 
-    print("Statements: $stmts")
-end
+#     # DEBUG 
+#     print("Statements: $stmts")
+# end
 
-# Judgements
-function parse_declaration_list(declarations::Vector{Any})
-    declaration_list = map(declarations) do declaration
-        @match declaration begin
-            Expr(:(::), a::Symbol, b::Expr) => parse_declaration(a, b)
-            a::Symbol => parse_declaration(a)
-            _ => throw("Incorrect Declaration")
-        end
-    end
-end
+# # Judgements
+# function parse_declaration_list(declarations::Vector{Any})
+#     declaration_list = map(declarations) do declaration
+#         @match declaration begin
+#             Expr(:(::), a::Symbol, b::Expr) => parse_declaration(a, b)
+#             a::Symbol => parse_declaration(a)
+#             _ => throw("Incorrect Declaration")
+#         end
+#     end
+# end
 
-function parse_declaration(name::Symbol, type::Expr)
-    @match type begin
-        Expr(:curly, type_name, dim) => Judgement.typedVar(name, TypeName(type_name, dim))
-        _ => throw("Incorrect Type")
-    end
-    # DEBUG
-    print("Parses Declaration w/ type\n")
-end
+# function parse_declaration(name::Symbol, type::Expr)
+#     @match type begin
+#         Expr(:curly, type_name, dim) => Judgement.typedVar(name, TypeName(type_name, dim))
+#         _ => throw("Incorrect Type")
+#     end
+#     # DEBUG
+#     print("Parses Declaration w/ type\n")
+# end
 
-function parse_declaration(name::Symbol)
-    # DEBUG
-    print("Parses Declaration w/o type\n")
-    Judgement.untypedVar(name)
-end
+# function parse_declaration(name::Symbol)
+#     # DEBUG
+#     print("Parses Declaration w/o type\n")
+#     Judgement.untypedVar(name)
+# end
 
 end 

@@ -2,23 +2,23 @@ module TestADT
 
 using Test
 using AlgebraicOptimization.HomologicalProgramming.CellularSheafTerm: 
-    restrictionMap, vertexStalk, TypeName, Product, Equation, untypedVar, typedVar, CellularSheafExpr, construct
+    Declaration, restrictionMap, vertexStalk, TypeName, Product, Equation, untypedDeclaration, typedDeclaration, CellularSheafExpr, construct
 
 # Let's prove that the current AST properly represents a cellular sheaf
 
 ### Judgements:
 
 # Restriction Maps
-A = untypedVar(Symbol("A"))
-B = untypedVar(Symbol("B"))
-C = untypedVar(Symbol("C"))
+A = untypedDeclaration(Symbol("A"), [1 0 0 0])
+B = untypedDeclaration(Symbol("B"), [1 0 0 0])
+C = untypedDeclaration(Symbol("C"), [1 0 0 0])
 
 # Stalks
 generic_type = TypeName(Symbol("Stalk"), 4)
 
-x = typedVar(Symbol("x"), generic_type)
-y = typedVar(Symbol("y"), generic_type)
-z = typedVar(Symbol("z"), generic_type)
+x = typedDeclaration(Symbol("x"), generic_type, missing)
+y = typedDeclaration(Symbol("y"), generic_type, missing)
+z = typedDeclaration(Symbol("z"), generic_type, missing)
 
 ### Products
 
