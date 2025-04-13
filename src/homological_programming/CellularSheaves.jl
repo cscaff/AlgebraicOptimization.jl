@@ -11,6 +11,7 @@ using LinearAlgebra
 using Graphs
 using ForwardDiff
 using MLStyle: @match 
+using ..ADT
 
 abstract type AbstractCellularSheaf end
 
@@ -135,57 +136,44 @@ end
 
 Constructs a cellular sheaf using a language of linear relations.
 """
-# macro cellular_sheaf(e)
-#     :(parse_cellular_sheaf($(Meta.quot(e))))
-# end
+macro cellular_sheaf(expr...)
+    local_vars = expr[1:end - 1] # Get local vars passed in as parameters
+    esc_vars = esc.(local_vars)
 
-# function parse_cellular_sheaf(expr::Expr)
-#     stmts = map(expr.args) do line
-#         # DEBUG
-#         print("Line: $(dump(line))\n")
-#         @match line begin
-#             # Filter unneeded line metadata
-#             ::LineNumberNode => missing
-#             # May accept tuple of variable declarations
-#             Expr(:tuple, args...) => parse_declaration_list(Vector(args))
-#             # May accept types defined per each line
-#             Expr(:(::), a::Symbol, b::Expr) => parse_declaration(a, b)
-#             a::Symbol => parse_declaration(a)
-#             _ => throw("Equations not yet added")
+    block = expr[end] # Get macro code
 
-#             # Accepts linear relations after declarations
-#             # Expr(:call, :(=), lhs, rhs) => # Impliment Equations
-#         end
-#     end
+    return :(parse_cellular_sheaf(($(esc_vars...),), $(Meta.quot(block))))
 
-#     # DEBUG 
-#     print("Statements: $stmts")
-# end
+end
 
-# # Judgements
-# function parse_declaration_list(declarations::Vector{Any})
-#     declaration_list = map(declarations) do declaration
-#         @match declaration begin
-#             Expr(:(::), a::Symbol, b::Expr) => parse_declaration(a, b)
-#             a::Symbol => parse_declaration(a)
-#             _ => throw("Incorrect Declaration")
-#         end
-#     end
-# end
+function parse_cellular_sheaf(local_vars::Tuple{Matrix{Int64}}, block::Expr)
+    stmts = map(expr.args) do line
+        @match line begin
+            # Filter unneeded line metadata
+            ::LineNumberNode => missing
 
-# function parse_declaration(name::Symbol, type::Expr)
-#     @match type begin
-#         Expr(:curly, type_name, dim) => Judgement.typedVar(name, TypeName(type_name, dim))
-#         _ => throw("Incorrect Type")
-#     end
-#     # DEBUG
-#     print("Parses Declaration w/ type\n")
-# end
+            # Accepts Variable Declarations
+            Expr(:tuple, args...) => parse_declaration.(args)
+            Expr(:(::), _, _) || ::Symbol => parse_declaration(line)
 
-# function parse_declaration(name::Symbol)
-#     # DEBUG
-#     print("Parses Declaration w/o type\n")
-#     Judgement.untypedVar(name)
-# end
+            # Accepts linear relations after declarations
+            Expr(:call, :(=), lhs, rhs) => parse_equation.(lhs, rhs)
+            _ => error("Line $line is malformed.")
+        end
+    end
+end
+
+function parse_declaration(declaration::Expr)
+    @match declaration begin
+        Expr(:(::), a::Symbol, b) => typedDeclaration(a, TypeName(b.args[1], b.args[2]), nothing)
+        a::Symbol => untypedDeclaration(a, nothing)
+        _ => throw("Variable declaration format is invalid.")
+    end
+end
+
+function parse_equation(lhs::Expr, rhs::Expr)
+    print("To Do")
+end
+
 
 end 

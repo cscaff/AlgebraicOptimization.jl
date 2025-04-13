@@ -3,6 +3,7 @@ module TestADT
 using Test
 using AlgebraicOptimization.HomologicalProgramming.CellularSheafTerm: 
     Declaration, restrictionMap, vertexStalk, TypeName, Product, Equation, untypedDeclaration, typedDeclaration, CellularSheafExpr, construct
+using AlgebraicOptimization
 
 # Let's prove that the current AST properly represents a cellular sheaf
 
@@ -87,4 +88,15 @@ triangularSheafWrongMapping = CellularSheafExpr([A, B, C, x, y, z], [EQ_bad_map 
 
 # DEBUG
 construct(triangularSheaf)
+
+
+# Macro Tests
+
+A = [1 0 0 0]
+
+@cellular_sheaf A begin
+    F::Sheaf, G::Sheaf
+
+end
+
 end
