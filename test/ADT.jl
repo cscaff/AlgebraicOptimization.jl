@@ -16,9 +16,9 @@ C = untypedDeclaration(Symbol("C"), [1 0 0 0])
 # Stalks
 generic_type = TypeName(Symbol("Stalk"), 4)
 
-x = typedDeclaration(Symbol("x"), generic_type, missing)
-y = typedDeclaration(Symbol("y"), generic_type, missing)
-z = typedDeclaration(Symbol("z"), generic_type, missing)
+x = typedDeclaration(Symbol("x"), generic_type, nothing)
+y = typedDeclaration(Symbol("y"), generic_type, nothing)
+z = typedDeclaration(Symbol("z"), generic_type, nothing)
 
 ### Products
 
