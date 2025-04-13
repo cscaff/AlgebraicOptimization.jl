@@ -162,6 +162,7 @@ function parse_cellular_sheaf(expr::Expr)
     print("Statements: $stmts")
 end
 
+# Judgements
 function parse_declaration_list(declarations::Vector{Any})
     declaration_list = map(declarations) do declaration
         @match declaration begin
@@ -173,11 +174,18 @@ function parse_declaration_list(declarations::Vector{Any})
 end
 
 function parse_declaration(name::Symbol, type::Expr)
+    @match type begin
+        Expr(:curly, type_name, dim) => Judgement.typedVar(name, TypeName(type_name, dim))
+        _ => throw("Incorrect Type")
+    end
+    # DEBUG
     print("Parses Declaration w/ type\n")
 end
 
 function parse_declaration(name::Symbol)
+    # DEBUG
     print("Parses Declaration w/o type\n")
+    Judgement.untypedVar(name)
 end
 
 end 
