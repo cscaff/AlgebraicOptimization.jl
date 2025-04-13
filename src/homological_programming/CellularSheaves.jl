@@ -160,13 +160,13 @@ function parse_cellular_sheaf(local_vals::Tuple{Vararg{Matrix{Int64}}}, local_na
             Expr(:(::), _, _) || ::Symbol => parse_declaration(line)
 
             # Accepts linear relations after declarations
-            Expr(:call, :(==), lhs, rhs) => Equation(parse_product(lhs), parse_product(rhs))
+            Expr(:call, :(==), lhs::Expr, rhs::Expr) => Equation(parse_product(lhs), parse_product(rhs))
             _ => error("Line $line is malformed.")
         end
     end
 end
 
-function parse_declaration(declaration::Expr)
+function parse_declaration(declaration::Any)
     @match declaration begin
         Expr(:(::), a::Symbol, b::Expr) => typedDeclaration(a, TypeName(b.args[1], b.args[2]), nothing)
         a::Symbol => untypedDeclaration(a, nothing)
@@ -178,7 +178,7 @@ end
 function parse_product(product::Expr)
     @match product begin
         Expr(:call, :(*), lhs::Symbol, rhs::Symbol) => Product(restrictionMap(lhs, Matrix{Any}(undef, 0, 0)), vertexStalk(rhs, 0)) # A*X
-        Expr(:call, name::Symbol, arg::Symbol) => Product(restrictionMap(lhs, Matrix{Any}(undef, 0, 0)), vertexStalk(rhs, 0)) # A(x)
+        Expr(:call, name::Symbol, arg::Symbol) => Product(restrictionMap(name, Matrix{Any}(undef, 0, 0)), vertexStalk(arg, 0)) # A(x)
         _ => error("Term $product is an invalid product.]\nA product is of form A*x or A(x).")
     end
 end

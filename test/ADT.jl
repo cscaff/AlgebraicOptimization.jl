@@ -99,7 +99,7 @@ C= [1 0 0 0]
 @cellular_sheaf A, B, C begin
     x::Stalk{4}, y::Stalk{4}
 
-    A*x == B*y
+    A(x) == B(y)
 
 end
 
