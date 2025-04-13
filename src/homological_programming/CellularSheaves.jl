@@ -141,15 +141,15 @@ macro cellular_sheaf(expr...)
     local_vars = expr[1:end - 1] # Get local vars passed in as parameters
     block = expr[end] # Get macro code
 
-    # Escape the values and preserve the names as symbols
+    # Escape local values and preserve the names
     esc_vals = esc.(local_vars)
     names = QuoteNode.(local_vars)
 
-    return :(parse_cellular_sheaf(($(esc_vals...),), ($(names...),), $(Meta.quot(block))))
+    return :(parse_cellular_sheaf(($(esc_vals...)), ($(names...)), $(Meta.quot(block))))
 
 end
 
-function parse_cellular_sheaf(local_vals::Tuple{Matrix{Int64}}, local_names::Tuple{Symbol}, block::Expr)
+function parse_cellular_sheaf(local_vals::Tuple{Vararg{Matrix{Int64}}}, local_names::Expr, block::Expr)
     stmts = map(block.args) do line
         @match line begin
             # Filter unneeded line metadata
@@ -160,7 +160,7 @@ function parse_cellular_sheaf(local_vals::Tuple{Matrix{Int64}}, local_names::Tup
             Expr(:(::), _, _) || ::Symbol => parse_declaration(line)
 
             # Accepts linear relations after declarations
-            Expr(:call, :(=), lhs, rhs) => parse_equation.(lhs, rhs)
+            Expr(:call, :(==), lhs, rhs) => Equation(parse_product(lhs), parse_product(rhs))
             _ => error("Line $line is malformed.")
         end
     end
@@ -174,9 +174,13 @@ function parse_declaration(declaration::Expr)
     end
 end
 
-function parse_equation(lhs::Expr, rhs::Expr)
-    print("To Do")
+# Create equations with empty values
+function parse_product(product::Expr)
+    @match product begin
+        Expr(:call, :(*), lhs::Symbol, rhs::Symbol) => Product(restrictionMap(lhs, Matrix{Any}(undef, 0, 0)), vertexStalk(rhs, 0)) # A*X
+        Expr(:call, name::Symbol, arg::Symbol) => Product(restrictionMap(lhs, Matrix{Any}(undef, 0, 0)), vertexStalk(rhs, 0)) # A(x)
+        _ => error("Term $product is an invalid product.]\nA product is of form A*x or A(x).")
+    end
 end
-
 
 end 

@@ -93,9 +93,13 @@ construct(triangularSheaf)
 # Macro Tests
 
 A = [1 0 0 0]
+B = [1 0 0 0]
+C= [1 0 0 0]
 
-@cellular_sheaf A begin
-    F::Stalk{4}, G::Stalk{4}
+@cellular_sheaf A, B, C begin
+    x::Stalk{4}, y::Stalk{4}
+
+    A*x == B*y
 
 end
 
