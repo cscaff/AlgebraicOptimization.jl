@@ -164,14 +164,11 @@ function parse_cellular_sheaf(local_vars::Tuple{Matrix{Int64}}, block::Expr)
 end
 
 function parse_declaration(declaration::Expr)
-    dec = @match declaration begin
+    @match declaration begin
         Expr(:(::), a::Symbol, b::Expr) => typedDeclaration(a, TypeName(b.args[1], b.args[2]), nothing)
         a::Symbol => untypedDeclaration(a, nothing)
-        _ => throw("Variable declaration format is invalid.")
+        _ => throw("Variable declaration: $declaration format is invalid.")
     end
-    # DEBUG 
-    print("NEW DECLARATION: $dec")
-    return dec
 end
 
 function parse_equation(lhs::Expr, rhs::Expr)
