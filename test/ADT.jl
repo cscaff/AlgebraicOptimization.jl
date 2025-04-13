@@ -95,7 +95,7 @@ construct(triangularSheaf)
 A = [1 0 0 0]
 
 @cellular_sheaf A begin
-    F::Sheaf, G::Sheaf
+    F::Stalk{4}, G::Stalk{4}
 
 end
 

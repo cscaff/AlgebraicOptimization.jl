@@ -11,7 +11,7 @@ using LinearAlgebra
 using Graphs
 using ForwardDiff
 using MLStyle: @match 
-using ..ADT
+using ..CellularSheafTerm: Declaration, restrictionMap, vertexStalk, TypeName, Product, Equation, untypedDeclaration, typedDeclaration, CellularSheafExpr, construct
 
 abstract type AbstractCellularSheaf end
 
@@ -147,7 +147,7 @@ macro cellular_sheaf(expr...)
 end
 
 function parse_cellular_sheaf(local_vars::Tuple{Matrix{Int64}}, block::Expr)
-    stmts = map(expr.args) do line
+    stmts = map(block.args) do line
         @match line begin
             # Filter unneeded line metadata
             ::LineNumberNode => missing
@@ -164,11 +164,14 @@ function parse_cellular_sheaf(local_vars::Tuple{Matrix{Int64}}, block::Expr)
 end
 
 function parse_declaration(declaration::Expr)
-    @match declaration begin
-        Expr(:(::), a::Symbol, b) => typedDeclaration(a, TypeName(b.args[1], b.args[2]), nothing)
+    dec = @match declaration begin
+        Expr(:(::), a::Symbol, b::Expr) => typedDeclaration(a, TypeName(b.args[1], b.args[2]), nothing)
         a::Symbol => untypedDeclaration(a, nothing)
         _ => throw("Variable declaration format is invalid.")
     end
+    # DEBUG 
+    print("NEW DECLARATION: $dec")
+    return dec
 end
 
 function parse_equation(lhs::Expr, rhs::Expr)
