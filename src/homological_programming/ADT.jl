@@ -128,6 +128,14 @@ function construct(expr::CellularSheafExpr)
     look_up_table = Dict{Symbol, Declaration}()
 
     for declaration in expr.context
+        # 1. Confirm type is a valid typing:
+        if declaration isa typedDeclaration
+            if declaration.type.name != Symbol("Stalk")
+                error("Variable \"$(declaration.name)\" type \"$(declaration.type.name)\" is unsupported.\nCurrent types include: Stalk.")
+            end 
+        end
+
+
         name =  @match declaration begin
             untypedDeclaration(name, _) => name
             typedDeclaration(name, _, _) => name

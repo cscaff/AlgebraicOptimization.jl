@@ -197,7 +197,7 @@ function parse_declaration(declaration::Any)
     end
 end
 
-# Create equations with empty values
+# Create equations with meaningless values (Will be decorated later in semantic phase)
 function parse_product(product::Expr)
     @match product begin
         Expr(:call, :(*), lhs::Symbol, rhs::Symbol) => Product(restrictionMap(lhs, Matrix{Any}(undef, 0, 0)), vertexStalk(rhs, 0)) # A*X
