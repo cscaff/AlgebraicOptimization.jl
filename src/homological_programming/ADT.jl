@@ -43,7 +43,7 @@ end
 
 """ Vertex Stalk
 
-This is the child node of Produuct and represents the vertex stalk "x" in a product "Ax".
+This is the child node of Product and represents the vertex stalk "x" in a product "Ax".
 """
 struct vertexStalk <: AbstractTerm
     name::Symbol
