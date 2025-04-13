@@ -133,7 +133,7 @@ struct ThreadedSheaf <: AbstractCellularSheaf
 end
 
 
-""" macro cellular_sheaf(e)
+""" macro cellular_sheaf(expr...)
 
 Constructs a cellular sheaf using a language of linear relations.
 """
@@ -184,6 +184,9 @@ function parse_cellular_sheaf(local_vals::Tuple{Vararg{Matrix{Int64}}}, local_na
         push!(decs, untypedDeclaration(name, val))
     end
 
+    # Build root of AST
+    root = CellularSheafExpr(decs, eqns)
+    return construct(root)
 end
 
 function parse_declaration(declaration::Any)
