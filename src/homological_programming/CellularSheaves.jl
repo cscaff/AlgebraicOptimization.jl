@@ -156,20 +156,40 @@ function parse_cellular_sheaf(local_vals::Tuple{Vararg{Matrix{Int64}}}, local_na
             ::LineNumberNode => missing
 
             # Accepts Variable Declarations
-            Expr(:tuple, args...) => parse_declaration.(args)
+            Expr(:tuple, args...) => parse_declaration.(args) # X, Y, Z
             Expr(:(::), _, _) || ::Symbol => parse_declaration(line)
 
             # Accepts linear relations after declarations
-            Expr(:call, :(==), lhs::Expr, rhs::Expr) => Equation(parse_product(lhs), parse_product(rhs))
+            Expr(:call, :(==), lhs::Expr, rhs::Expr) => Equation(parse_product(lhs), parse_product(rhs)) # A*x == B*y
             _ => error("Line $line is malformed.")
         end
+    end |> skipmissing |> collect
+
+    # Define arrays for declarations and equations
+    decs = []
+    eqns = []
+
+    # Divide statements into declarations and equations
+    foreach(stmts) do s
+        @match s begin
+            ::typedDeclaration || ::untypedDeclaration => push!(decs, s)
+            ::Vector{typedDeclaration} || ::Vector{untypedDeclaration} => append!(decs, s)
+            ::Equation => push!(eqns, s)
+            _ => error("Statement containing $s of type $(typeof(s)) was not added.")
+        end
     end
+
+    # Append passed in local arguments to declaration array
+    for (name, val) in zip(Tuple(local_names.args), local_vals)
+        push!(decs, untypedDeclaration(name, val))
+    end
+
 end
 
 function parse_declaration(declaration::Any)
     @match declaration begin
-        Expr(:(::), a::Symbol, b::Expr) => typedDeclaration(a, TypeName(b.args[1], b.args[2]), nothing)
-        a::Symbol => untypedDeclaration(a, nothing)
+        Expr(:(::), a::Symbol, b::Expr) => typedDeclaration(a, TypeName(b.args[1], b.args[2]), nothing) # x::Stalk{4}
+        a::Symbol => untypedDeclaration(a, nothing) # x 
         _ => throw("Variable declaration: $declaration format is invalid.")
     end
 end

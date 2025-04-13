@@ -97,9 +97,11 @@ B = [1 0 0 0]
 C= [1 0 0 0]
 
 @cellular_sheaf A, B, C begin
-    x::Stalk{4}, y::Stalk{4}
+    x::Stalk{4}, y::Stalk{4}, z::stalk{4}
 
     A(x) == B(y)
+    B(y) == C(z)
+    C(z) == A(x)
 
 end
 
