@@ -1,6 +1,6 @@
 """ CellularSheafParser
 
-TO DO
+Parses restriction maps, vertex stalks, and a series of linear relations to more intuitively create cellular sheaves with more discipline.
 """
 module CellularSheafParser
 
@@ -9,15 +9,58 @@ using MLStyle: @match
 
 export @cellular_sheaf
 
-""" macro cellular_sheaf(expr...)
+""" cellular_sheaf(expr...)
 
-Constructs a cellular sheaf using a language of linear relations.
+This macro abstracts functions such as:
+
+1. ```julia CellularSheaf(vertex_stalks::Vector{Int}, edge_stalks::Vector{Int}) ``` 
+2. ```julia set_edge_maps!(s::AbstractCellularSheaf, v1::Int, v2::Int, e::Int, rm1::AbstractMatrix, rm2::AbstractMatrix)```
+
+It accepts restriction map matrices as argument parameters and allows a user to declare vertex stalks and linear relations
+representing edges in the cellular sheaf. For instance, a user can represent a triangular sheaf using the following julia code:
+
+```julia
+
+# Define restriction maps as matrices
+A = [1 0 0 0]
+B = [1 0 0 0]
+C = [1 0 0 0]
+
+# You can pass in the maps as follows: 
+
+triangle = @cellular_sheaf A, B, C begin
+    # You can define vertex stalks using the format: name::Stalk{dimension}
+    x::Stalk{4}, y::Stalk{4}, z::Stalk{4}
+
+    # Then, you can define your relations as equations:
+
+    # For instance, in "A(x) == B(y)", x and y are incident vertices. A maps x to the shared edge stalk. B maps y to the shared edge stalk.
+    A(x) == B(y)
+    A(x) == C(z)
+    B(y) == C(z)
+
+end
+```
+
+The previous code is the same as writing:
+
+```julia
+
+c = CellularSheaf([4, 4, 4], [1, 1, 1])
+set_edge_maps!(c, 1, 2, 1, C, C)
+set_edge_maps!(c, 1, 3, 2, C, C)
+set_edge_maps!(c, 2, 3, 3, C, C)
+```
+
+While the first example may appear like more lines of code, it is far easier to understand the pattern that is occuring, making it easier for developers
+to quickly construct cellular sheaves. Likewise, because edge stalk dimensions are inferred, this provides a more disciplined approach to building sheaves,
+leaving less room for errors.
 """
 macro cellular_sheaf(expr...)
     local_vars = expr[1:end - 1] # Get local vars passed in as parameters
     block = expr[end] # Get macro code
 
-    # Escape local values and preserve the names
+    # Escape local values and preserve names
     esc_vals = esc.(local_vars)
     names = QuoteNode.(local_vars)
 
@@ -73,7 +116,7 @@ function parse_declaration(declaration::Any)
     end
 end
 
-# Create equations with meaningless values (Will be decorated later in semantic phase)
+# Creates equations with meaningless values (Will be decorated later in semantic phase)
 function parse_product(product::Expr)
     @match product begin
         Expr(:call, :(*), lhs::Symbol, rhs::Symbol) => Product(restrictionMap(lhs, Matrix{Any}(undef, 0, 0)), vertexStalk(rhs, 0)) # A*X
