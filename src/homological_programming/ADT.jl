@@ -135,13 +135,11 @@ function construct(expr::CellularSheafExpr)
             end 
         end
 
-
+        # 2. Confirm variable has not already been declared:
         name =  @match declaration begin
             untypedDeclaration(name, _) => name
             typedDeclaration(name, _, _) => name
         end
-
-        # Assert no variable redeclarations
         if haskey(look_up_table, name)
             error("Variable: \"$name\" has already been declared.")
         else
@@ -149,12 +147,12 @@ function construct(expr::CellularSheafExpr)
         end
     end
     
-    # Gathers vertex stalk array
+    # Gathers vertex stalk array from declarations
     vertex_dims = Int[] 
     vertex_to_index = Dict{Symbol, Int}() # Store array locations for later edge mapping
     
     for j in expr.context
-        if type_name(j) == :Stalk
+        if type_name(j) == Symbol("Stalk")
             push!(vertex_dims, j.type.dim)
             vertex_to_index[j.name] = length(vertex_dims)
         end
@@ -164,7 +162,9 @@ function construct(expr::CellularSheafExpr)
     # - Two Credentials:
     #   - Variables declared
     #   - Inferred edge stalk is consistent per incident restriction map + vertex stalks 
-    # AND Gather edge stalk dimension
+    # Decorate equations with declared values
+    # Infer and gather edge stalk dimensions
+
     edge_to_index = Dict{Equation, Int}() # Store array locations for later edge mapping
     edge_dims = Int[]
 
@@ -177,10 +177,20 @@ function construct(expr::CellularSheafExpr)
 
         eq_vars = [rm_lhs.name, vs_lhs.name, rm_rhs.name,  vs_rhs.name]
 
-        # Assert declarations for four variables: O(1)
+        # Assert declarations for four variables
         for var in eq_vars
-            assert_variable_definition(var, eq_vars[1], eq_vars[2], eq_vars[3], eq_vars[4], look_up_table)
+            assert_variable_declaration(var, eq_vars[1], eq_vars[2], eq_vars[3], eq_vars[4], look_up_table)
         end
+
+        # Decorate equations with variable definitions
+
+        # Maps
+        eq.lhs.restriction_map.matrix = look_up_table[eq.lhs.restriction_map.name].val
+        eq.rhs.restriction_map.matrix = look_up_table[eq.rhs.restriction_map.name].val
+
+        # Stalks
+        eq.lhs.vertex_stalk.dim = look_up_table[eq.lhs.vertex_stalk.name].type.dim
+        eq.rhs.vertex_stalk.dim = look_up_table[eq.rhs.vertex_stalk.name].type.dim
 
         # Infers edge stalk and asserts consistencies with vertex stalks and restriction maps 
 
@@ -215,7 +225,7 @@ function construct(expr::CellularSheafExpr)
    end
 end
 
-function assert_variable_definition(name::Symbol, map_lhs::Symbol, vertex_lhs::Symbol, map_rhs::Symbol, vertex_rhs::Symbol, table::Dict{Symbol, Declaration})
+function assert_variable_declaration(name::Symbol, map_lhs::Symbol, vertex_lhs::Symbol, map_rhs::Symbol, vertex_rhs::Symbol, table::Dict{Symbol, Declaration})
     if !haskey(table, name)
         error("Restriction map \"$name\" in \"", map_lhs, vertex_lhs, " = ", map_rhs, vertex_rhs, "\" is undefined.")
     end

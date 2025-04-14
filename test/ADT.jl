@@ -1,9 +1,9 @@
 module TestADT
 
 using Test
+using AlgebraicOptimization
 using AlgebraicOptimization.HomologicalProgramming.CellularSheafTerm: 
     Declaration, restrictionMap, vertexStalk, TypeName, Product, Equation, untypedDeclaration, typedDeclaration, CellularSheafExpr, construct
-using AlgebraicOptimization
 
 # Let's prove that the current AST properly represents a cellular sheaf
 
@@ -97,7 +97,7 @@ B = [1 0 0 0]
 C = [1 0 0 0]
 
 @cellular_sheaf A, B, C begin
-    x::Stalk{4}, y::Stalk{4}, z::stalk{4}
+    x::Stalk{4}, y::Stalk{4}, z::Stalk{4}
 
     A(x) == B(y)
     B(y) == C(z)
