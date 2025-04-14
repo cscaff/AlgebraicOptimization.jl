@@ -122,98 +122,27 @@ end
  TO DO 
 """
 function construct(expr::CellularSheafExpr)
-    # Check variable declarations
-
-    # Generate Variable Look Up Table
-    look_up_table = Dict{Symbol, Declaration}()
-
-    for declaration in expr.context
-        # 1. Confirm type is a valid typing:
-        if declaration isa typedDeclaration
-            if declaration.type.name != Symbol("Stalk")
-                error("Variable \"$(declaration.name)\" type \"$(declaration.type.name)\" is unsupported.\nCurrent types include: Stalk.")
-            end 
-        end
-
-        # 2. Confirm variable has not already been declared:
-        name =  @match declaration begin
-            untypedDeclaration(name, _) => name
-            typedDeclaration(name, _, _) => name
-        end
-        if haskey(look_up_table, name)
-            error("Variable: \"$name\" has already been declared.")
-        else
-            look_up_table[name] = declaration
-        end
-    end
-    
-    # Gathers vertex stalk array from declarations
+    # Dictionaries for storing constructor parameters
     vertex_dims = Int[] 
-    vertex_to_index = Dict{Symbol, Int}() # Store array locations for later edge mapping
-    
-    for j in expr.context
-        if type_name(j) == Symbol("Stalk")
-            push!(vertex_dims, j.type.dim)
-            vertex_to_index[j.name] = length(vertex_dims)
-        end
-    end
+    vertex_to_index = Dict{Symbol, Int}() 
 
-    # Check that system of linear relations are well defined:
-    # - Two Credentials:
-    #   - Variables declared
-    #   - Inferred edge stalk is consistent per incident restriction map + vertex stalks 
-    # Decorate equations with declared values
-    # Infer and gather edge stalk dimensions
-
-    edge_to_index = Dict{Equation, Int}() # Store array locations for later edge mapping
+    edge_to_index = Dict{Equation, Int}()
     edge_dims = Int[]
 
-    for eq in expr.equations
-        # Extract map & vertices
-        rm_lhs = eq.lhs.restriction_map
-        rm_rhs = eq.rhs.restriction_map
-        vs_lhs = eq.lhs.vertex_stalk
-        vs_rhs = eq.rhs.vertex_stalk
+    # Generate variable look up table
+    look_up_table = generate_look_up_table(expr.context)
 
-        eq_vars = [rm_lhs.name, vs_lhs.name, rm_rhs.name,  vs_rhs.name]
+    # Decorate equation tree nodes
+    decorate_equations(expr.equations, look_up_table, edge_dims, edge_to_index)
 
-        # Assert declarations for four variables
-        for var in eq_vars
-            assert_variable_declaration(var, eq_vars[1], eq_vars[2], eq_vars[3], eq_vars[4], look_up_table)
+    # Gather vertex stalk dimensions for construction
+    for declaration in expr.context
+        if declaration isa typedDeclaration
+            push!(vertex_dims, declaration.type.dim)
+            # Store mappiong for construction
+            vertex_to_index[declaration.name] = length(vertex_dims)
         end
-
-        # Decorate equations with variable definitions
-
-        # Maps
-        eq.lhs.restriction_map.matrix = look_up_table[eq.lhs.restriction_map.name].val
-        eq.rhs.restriction_map.matrix = look_up_table[eq.rhs.restriction_map.name].val
-
-        # Stalks
-        eq.lhs.vertex_stalk.dim = look_up_table[eq.lhs.vertex_stalk.name].type.dim
-        eq.rhs.vertex_stalk.dim = look_up_table[eq.rhs.vertex_stalk.name].type.dim
-
-        # Infers edge stalk and asserts consistencies with vertex stalks and restriction maps 
-
-        # Ensure restriction map can be multiplied by vertex stalk
-        if (size(rm_lhs.matrix)[2] == vs_lhs.dim) && (size(rm_rhs.matrix)[2] == vs_rhs.dim)
-            if size(rm_lhs.matrix)[1] == size(rm_rhs.matrix)[1]
-                push!(edge_dims, size(rm_lhs.matrix)[1])
-                edge_to_index[eq] = length(edge_dims)
-            else
-                error(
-                """Inferred edge stalk on relation: "$(rm_lhs.name)$(vs_lhs.name) = $(rm_rhs.name)$(vs_rhs.name)" is inconsistent.
-                    Left restriction map maps dimension $(size(rm_lhs.matrix)[2]) to dimension $(size(rm_lhs.matrix)[1]).
-                    Right restriction map maps dimension $(size(rm_rhs.matrix)[2]) to dimension $(size(rm_rhs.matrix)[1]).
-                """)
-            end
-        else
-            if size(rm_lhs.matrix)[2] != vs_lhs.dim
-                error("Left restriction map (Size: $(size(rm_lhs.matrix))) cannot map left vertex stalk (Dimension: $(vs_lhs.dim)).")
-            else
-                error("Right restriction map (Size: $(size(rm_rhs.matrix))) cannot map right vertex stalk (Dimension: $(vs_rhs.dim)).")
-            end
-        end
-    end
+    end    
 
    # Construct Cellular Sheaf
    c = CellularSheaf(vertex_dims, edge_dims)
@@ -226,9 +155,89 @@ function construct(expr::CellularSheafExpr)
    return c
 end
 
-function assert_variable_declaration(name::Symbol, map_lhs::Symbol, vertex_lhs::Symbol, map_rhs::Symbol, vertex_rhs::Symbol, table::Dict{Symbol, Declaration})
+function generate_look_up_table(context::Vector{Declaration})
+    look_up_table = Dict{Symbol, Declaration}()
+
+    for declaration in context
+        # Confirm that the type used is a supported type (Current Supported Types: "Stalk" [Vertex Stalk])
+        if declaration isa typedDeclaration && type_name(declaration) != Symbol("Stalk")
+            error("Variable \"$(declaration.name)\" type \"$(declaration.type.name)\" is unsupported.\nCurrent types include: \"Stalk\" (Vertex Stalk).")
+        end
+
+        # Confirm there are no variable redeclarations
+        name =  @match declaration begin
+            untypedDeclaration(name, _) => name
+            typedDeclaration(name, _, _) => name
+        end
+
+        if haskey(look_up_table, name)
+            error("Variable: \"$name\" has already been declared.")
+        else
+            look_up_table[name] = declaration
+        end
+    end
+
+    return look_up_table
+end
+
+function decorate_equations(equations::Vector{Equation}, table::Dict{Symbol, Declaration}, edge_dims::Vector{Int}, edge_mapping::Dict{Equation, Int})
+    for eq in equations
+        # Extract restriction maps & vertices
+        rm_lhs = eq.lhs.restriction_map
+        rm_rhs = eq.rhs.restriction_map
+        vs_lhs = eq.lhs.vertex_stalk
+        vs_rhs = eq.rhs.vertex_stalk
+
+        # Assert that all variables in the equation have been declared
+        assert_variable_declaration(rm_lhs.name, table, eq)
+        assert_variable_declaration(rm_rhs.name, table, eq)
+        assert_variable_declaration(vs_lhs.name, table, eq)
+        assert_variable_declaration(vs_rhs.name, table, eq)
+
+        # Decorate Restriction Maps w/ declaration definition
+        rm_lhs.matrix = table[rm_lhs.name].val
+        rm_rhs.matrix = table[rm_rhs.name].val
+
+        # Decorate Vertex Stalks w/ declaration definition
+        vs_lhs.dim = table[vs_lhs.name].type.dim
+        vs_rhs.dim = table[vs_rhs.name].type.dim
+
+        # Infer edge stalks, confirm the restriction maps and vertex stalks are consistent, and store their values for construction
+        infer_edge(eq, edge_dims, edge_mapping)
+    end
+end
+
+function infer_edge(eq::Equation, edge_dims::Vector{Int}, edge_mapping::Dict{Equation, Int})
+    # Extract restriction maps & vertices
+    rm_lhs = eq.lhs.restriction_map
+    rm_rhs = eq.rhs.restriction_map
+    vs_lhs = eq.lhs.vertex_stalk
+    vs_rhs = eq.rhs.vertex_stalk
+    
+    # Ensure restriction map can be multiplied by vertex stalk
+    if (size(rm_lhs.matrix)[2] == vs_lhs.dim) && (size(rm_rhs.matrix)[2] == vs_rhs.dim)
+        if size(rm_lhs.matrix)[1] == size(rm_rhs.matrix)[1]
+            push!(edge_dims, size(rm_lhs.matrix)[1])
+            edge_mapping[eq] = length(edge_dims)
+        else
+            error(
+            """Inferred edge stalk on relation: "$(rm_lhs.name)$(vs_lhs.name) = $(rm_rhs.name)$(vs_rhs.name)" is inconsistent.
+                Left restriction map maps dimension $(size(rm_lhs.matrix)[2]) to dimension $(size(rm_lhs.matrix)[1]).
+                Right restriction map maps dimension $(size(rm_rhs.matrix)[2]) to dimension $(size(rm_rhs.matrix)[1]).
+            """)
+        end
+    else
+        if size(rm_lhs.matrix)[2] != vs_lhs.dim
+            error("Left restriction map (Size: $(size(rm_lhs.matrix))) cannot map left vertex stalk (Dimension: $(vs_lhs.dim)).")
+        else
+            error("Right restriction map (Size: $(size(rm_rhs.matrix))) cannot map right vertex stalk (Dimension: $(vs_rhs.dim)).")
+        end
+    end
+end
+
+function assert_variable_declaration(name::Symbol, table::Dict{Symbol, Declaration}, eq::Equation)
     if !haskey(table, name)
-        error("Restriction map \"$name\" in \"", map_lhs, vertex_lhs, " = ", map_rhs, vertex_rhs, "\" is undefined.")
+        error("Restriction map \"$name\" in \"", eq.lhs.restriction_map.name, eq.lhs.vertex_stalk.name, " = ", eq.rhs.restriction_map.name, eq.rhs.vertex_stalk.name, "\" is undefined.")
     end
 end
 
@@ -238,6 +247,5 @@ function type_name(j::Declaration)
         untypedDeclaration(name, _) => nothing
     end
 end
-
 
 end
