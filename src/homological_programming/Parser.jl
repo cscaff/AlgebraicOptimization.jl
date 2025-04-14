@@ -100,6 +100,9 @@ function parse_cellular_sheaf(local_vals::Any, local_names::Expr, block::Expr)
 
     # Append passed in local arguments to declaration array
     for (name, val) in zip(Tuple(local_names.args), local_vals)
+        if !(val isa Matrix) 
+            throw("Restriction map \"$val\" is not a matrix.")
+        end
         push!(decs, untypedDeclaration(name, val))
     end
 

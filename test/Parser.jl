@@ -63,7 +63,7 @@ C = [1 0 0 0]
     A(x) == C(z)
     B(y) == C(z)
 
-    end
+end
 
 # Testing invalid product
 A = [1 0 0 0]
@@ -77,9 +77,23 @@ C = [1 0 0 0]
     A(x) == C(z)
     B(y) == C(z)
 
-    end
+end
 
-    # Testing invalid declaration
+# Testing invalid restriction map
+A = [1 0 0 0]
+B = [1 0 0 0]
+C = "meep"
+
+@test_throws ErrorException("Restriction map \"meep\" is not a matrix.") @cellular_sheaf A, B, C begin
+    x::Stalk{4}, y::Stalk{4}, z::Stalk{4}
+
+    A(x) == B(y)
+    A(x) == C(z)
+    B(y) == C(z)
+
+end
+
+# Testing invalid declaration
 A = [1 0 0 0]
 B = [1 0 0 0]
 C = [1 0 0 0]
