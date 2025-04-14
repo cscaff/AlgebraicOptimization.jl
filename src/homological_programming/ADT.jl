@@ -221,7 +221,6 @@ function construct(expr::CellularSheafExpr)
    # Construct edge maps
    for eq in expr.equations
        set_edge_maps!(c, vertex_to_index[eq.lhs.vertex_stalk.name], vertex_to_index[eq.rhs.vertex_stalk.name], edge_to_index[eq], eq.lhs.restriction_map.matrix, eq.rhs.restriction_map.matrix)
-       print("DEBUG: V1: $(vertex_to_index[eq.lhs.vertex_stalk.name]), V2: $(vertex_to_index[eq.rhs.vertex_stalk.name]), E1: $(edge_to_index[eq]), RM1: $(eq.lhs.restriction_map.matrix), RM2: $(eq.rhs.restriction_map.matrix)\n")
    end
 
    return c
