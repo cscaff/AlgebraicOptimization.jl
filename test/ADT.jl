@@ -91,18 +91,30 @@ construct(triangularSheaf)
 
 
 # Macro Tests
+function isEqual(sheafOne::CellularSheaf, sheafTwo::CellularSheaf)
+    @test sheafOne.vertex_stalks == sheafTwo.vertex_stalks
+    @test sheafOne.edge_stalks == sheafTwo.edge_stalks
+    @test sheafOne.coboundary == sheafTwo.coboundary
+end
 
 A = [1 0 0 0]
 B = [1 0 0 0]
 C = [1 0 0 0]
 
-@cellular_sheaf A, B, C begin
+test = @cellular_sheaf A, B, C begin
     x::Stalk{4}, y::Stalk{4}, z::Stalk{4}
 
     A(x) == B(y)
+    A(x) == C(z)
     B(y) == C(z)
-    C(z) == A(x)
 
 end
+
+c = CellularSheaf([4, 4, 4], [1, 1, 1])
+set_edge_maps!(c, 1, 2, 1, C, C)
+set_edge_maps!(c, 1, 3, 2, C, C)
+set_edge_maps!(c, 2, 3, 3, C, C)
+
+isEqual(test, c)
 
 end

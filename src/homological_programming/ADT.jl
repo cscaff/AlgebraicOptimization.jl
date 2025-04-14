@@ -37,7 +37,7 @@ abstract type AbstractTerm end
 
 This is the child node of Produuct and represents the restriction map "A" in a product "Ax".
 """
-struct restrictionMap <: AbstractTerm
+mutable struct restrictionMap <: AbstractTerm
     name::Symbol
     matrix::Matrix{Any}
 end
@@ -46,7 +46,7 @@ end
 
 This is the child node of Product and represents the vertex stalk "x" in a product "Ax".
 """
-struct vertexStalk <: AbstractTerm
+mutable struct vertexStalk <: AbstractTerm
     name::Symbol
     dim::Int
 end
@@ -221,8 +221,10 @@ function construct(expr::CellularSheafExpr)
    # Construct edge maps
    for eq in expr.equations
        set_edge_maps!(c, vertex_to_index[eq.lhs.vertex_stalk.name], vertex_to_index[eq.rhs.vertex_stalk.name], edge_to_index[eq], eq.lhs.restriction_map.matrix, eq.rhs.restriction_map.matrix)
-       # Ax = By
+       print("DEBUG: V1: $(vertex_to_index[eq.lhs.vertex_stalk.name]), V2: $(vertex_to_index[eq.rhs.vertex_stalk.name]), E1: $(edge_to_index[eq]), RM1: $(eq.lhs.restriction_map.matrix), RM2: $(eq.rhs.restriction_map.matrix)\n")
    end
+
+   return c
 end
 
 function assert_variable_declaration(name::Symbol, map_lhs::Symbol, vertex_lhs::Symbol, map_rhs::Symbol, vertex_rhs::Symbol, table::Dict{Symbol, Declaration})
