@@ -68,7 +68,7 @@ macro cellular_sheaf(expr...)
 
 end
 
-function parse_cellular_sheaf(local_vals::Tuple{Vararg{Matrix{Int64}}}, local_names::Expr, block::Expr)
+function parse_cellular_sheaf(local_vals::Any, local_names::Expr, block::Expr)
     stmts = map(block.args) do line
         @match line begin
             # Filter unneeded line metadata
@@ -121,7 +121,7 @@ function parse_product(product::Expr)
     @match product begin
         Expr(:call, :(*), lhs::Symbol, rhs::Symbol) => Product(restrictionMap(lhs, Matrix{Any}(undef, 0, 0)), vertexStalk(rhs, 0)) # A*X
         Expr(:call, name::Symbol, arg::Symbol) => Product(restrictionMap(name, Matrix{Any}(undef, 0, 0)), vertexStalk(arg, 0)) # A(x)
-        _ => error("Term $product is an invalid product.]\nA product is of form A*x or A(x).")
+        _ => error("Term $product is an invalid product.\nA product is of form A*x or A(x).")
     end
 end
 
