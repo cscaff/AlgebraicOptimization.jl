@@ -51,6 +51,27 @@ set_edge_maps!(func_result, 1, 3, 2, A, B)
 # Test
 isEqual(macro_result, func_result)
 
+# Singular Map Test
+C = [1 0 0 0]
+
+macro_result = @cellular_sheaf C begin
+    x::Stalk{4}, y::Stalk{4}, z::Stalk{4}
+
+    C(x) == C(y)
+    C(x) == C(z)
+    C(y) == C(z)
+
+end
+
+func_result = CellularSheaf([4, 4, 4], [1, 1, 1])
+set_edge_maps!(func_result, 1, 2, 1, C, C)
+set_edge_maps!(func_result, 1, 3, 2, C, C)
+set_edge_maps!(func_result, 2, 3, 3, C, C)
+
+# Test
+isEqual(macro_result, func_result)
+
+
 ### Parse Error Handling ###
 
 # Testing for malformed line
@@ -107,4 +128,4 @@ C = [1 0 0 0]
     A(x) == C(z)
     B(y) == C(z)
 
-    end
+end

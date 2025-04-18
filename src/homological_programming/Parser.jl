@@ -60,9 +60,20 @@ macro cellular_sheaf(expr...)
     local_vars = expr[1:end - 1] # Get local vars passed in as parameters
     block = expr[end] # Get macro code
 
+    esc_vals = nothing
+    names = nothing
+
     # Escape local values and preserve names
-    esc_vals = esc.(local_vars)
-    names = QuoteNode.(local_vars)
+    if typeof((local_vars[1])) == Symbol
+        # Singular Argument Case -> Wrap as tuple
+        tuple_expr = Expr(:tuple, local_vars[1])
+        esc_vals = [esc(tuple_expr)]
+        names = [QuoteNode(tuple_expr)]
+    else
+        # Multi Argument Case -> Leave as is
+        esc_vals = esc.(local_vars)
+        names = QuoteNode.(local_vars)
+    end
 
     return :(parse_cellular_sheaf(($(esc_vals...)), ($(names...)), $(Meta.quot(block))))
 
