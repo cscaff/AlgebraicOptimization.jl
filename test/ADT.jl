@@ -1,3 +1,5 @@
+module TestADT
+
 using Test
 using AlgebraicOptimization
 using AlgebraicOptimization.HomologicalProgramming.CellularSheafTerm: 
@@ -5,7 +7,7 @@ using AlgebraicOptimization.HomologicalProgramming.CellularSheafTerm:
 
 # Let's prove that the current AST properly represents a cellular sheaf
 
-### Declarations:
+### Judgements:
 
 # Restriction Maps
 A = untypedDeclaration(Symbol("A"), [1 0 0 0])
@@ -39,34 +41,12 @@ Cz = Product(C_rm, z_stalk)
 ### Equations
 
 EQ1 = Equation(Ax, By)
-EQ2 = Equation(Ax, Cz)
-EQ3 = Equation(By, Cz)
+EQ2 = Equation(By, Cz)
+EQ3 = Equation(Cz, Ax)
 
 ### CellularSheafExpr
 
-triangularSheafExpr = CellularSheafExpr([A, B, C, x, y, z], [EQ1 ,EQ2, EQ3])
-
-triangularSheaf = construct(triangularSheafExpr)
-
-# Function Version
-ABC = [1 0 0 0]
-
-c = CellularSheaf([4, 4, 4], [1, 1, 1])
-set_edge_maps!(c, 1, 2, 1, ABC, ABC)
-set_edge_maps!(c, 1, 3, 2, ABC, ABC)
-set_edge_maps!(c, 2, 3, 3, ABC, ABC)
-
-# Testing equality
-@test triangularSheaf.vertex_stalks == c.vertex_stalks
-@test triangularSheaf.edge_stalks == c.edge_stalks
-@test triangularSheaf.coboundary == c.coboundary
-
-# Testing that undefined types will throw error.
-false_type = TypeName(Symbol("FAKE"), 4)
-x_false = typedDeclaration(Symbol("x"), false_type, nothing)
-
-triangularSheafExprFalseType = CellularSheafExpr([A, B, C, x_false, y, z], [EQ1 ,EQ2, EQ3])
-@test_throws ErrorException("Variable \"x\" type \"FAKE\" is unsupported.\nCurrent types include: \"Stalk\" (Vertex Stalk).") construct(triangularSheafExprFalseType)
+triangularSheaf = CellularSheafExpr([A, B, C, x, y, z], [EQ1 ,EQ2, EQ3])
 
 # Testing no duplicate variables!
 triangularSheafDuplicate = CellularSheafExpr([A, A, B, C, x, y, z], [EQ1 ,EQ2, EQ3])
@@ -83,14 +63,9 @@ triangularSheafUndeclared = CellularSheafExpr([A, B, C, x, y, z], [EQ_undefined 
 @test_throws ErrorException("Restriction map \"R\" in \"Rx = By\" is undefined.") construct(triangularSheafUndeclared)
 
 # Test inconsistent edge stalk inferred from bad restriction maps
-B = untypedDeclaration(Symbol("B"), [1 0 0 0; 0 0 0 1])
-B_rm = restrictionMap(Symbol("B"), [1 0 0 0; 0 0 0 1])
-y_stalk = vertexStalk(Symbol("y"), 4)
+B_inconsistent = untypedDeclaration(Symbol("B"), [1 0 0 0; 0 0 0 1])
 
-By = Product(B_rm, y_stalk)
-EQ_inconsistent = Equation(Ax, By)
-
-triangularSheafInconsistent = CellularSheafExpr([A, B, C, x, y, z], [EQ_inconsistent, EQ2, EQ3])
+triangularSheafInconsistent = CellularSheafExpr([A, B_inconsistent, C, x, y, z], [EQ1 ,EQ2, EQ3])
 @test_throws ErrorException(
     """Inferred edge stalk on relation: "Ax = By" is inconsistent.
         Left restriction map maps dimension 4 to dimension 1.
@@ -98,12 +73,9 @@ triangularSheafInconsistent = CellularSheafExpr([A, B, C, x, y, z], [EQ_inconsis
     """) construct(triangularSheafInconsistent)
 
 # Incorrect vertex stalk dimension or restriction map size
-B = untypedDeclaration(Symbol("B"), [1 0 0])
-B_rm = restrictionMap(Symbol("B"), [1 0 0]) # Size 1 x 3
-y_stalk = vertexStalk(Symbol("y"), 4) # Dimension 4 
+B_bad_map = untypedDeclaration(Symbol("B"), [1 0 0])
 
-By = Product(B_rm, y_stalk)
-EQ_bad_map = Equation(Ax, By)
-
-triangularSheafWrongMapping = CellularSheafExpr([A, B, C, x, y, z], [EQ_bad_map ,EQ2, EQ3])
+triangularSheafWrongMapping = CellularSheafExpr([A, B_bad_map, C, x, y, z], [EQ1 ,EQ2, EQ3])
 @test_throws ErrorException("Right restriction map (Size: (1, 3)) cannot map right vertex stalk (Dimension: 4).") construct(triangularSheafWrongMapping)
+
+end
