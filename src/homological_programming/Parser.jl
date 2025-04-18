@@ -101,7 +101,7 @@ function parse_cellular_sheaf(local_vals::Any, local_names::Expr, block::Expr)
     # Append passed in local arguments to declaration array
     for (name, val) in zip(Tuple(local_names.args), local_vals)
         if !(val isa Matrix) 
-            throw("Restriction map \"$val\" is not a matrix.")
+            error("Restriction map \"$val\" is not a matrix.")
         end
         push!(decs, untypedDeclaration(name, val))
     end
@@ -115,7 +115,7 @@ function parse_declaration(declaration::Any)
     @match declaration begin
         Expr(:(::), a::Symbol, b::Expr) => typedDeclaration(a, TypeName(b.args[1], b.args[2]), nothing) # x::Stalk{4}
         a::Symbol => untypedDeclaration(a, nothing) # x 
-        _ => throw("Variable declaration: $declaration format is invalid.")
+        _ => error("Variable declaration: $declaration format is invalid.")
     end
 end
 

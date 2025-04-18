@@ -106,4 +106,3 @@ C = [1 0 0 0]
     B(y) == C(z)
 
     end
-# Throwing correct exception but test errors? "BoundsError: attempt to access 53-codeunit String at index [1]"
