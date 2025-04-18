@@ -11,8 +11,8 @@ end
 ### Functionality Tests ###
 
 # Triangle Sheaf for Consensus
-A = [1 0 0 0]
-B = [1 0 0 0]
+A = [1 0 1 0]
+B = [1 0 0 1]
 C = [1 0 0 0]
 
 macro_result = @cellular_sheaf A, B, C begin
@@ -34,7 +34,7 @@ isEqual(macro_result, func_result)
 
 # Formation Sheaf
 A = [1 0 0 0; 0 0 1 0]
-B = [1 0 0 0; 0 0 1 0]
+B = [1 0 1 1; 0 0 1 0]
 
 macro_result = @cellular_sheaf A, B begin
     x::Stalk{4}, y::Stalk{4}, z::Stalk{4}
