@@ -3,18 +3,19 @@ using AlgebraicOptimization
 
 # Equality Checking Helper Function
 function isEqual(sheafOne::CellularSheaf, sheafTwo::CellularSheaf)
-    @test sheafOne.vertex_stalks == sheafTwo.vertex_stalks
-    @test sheafOne.edge_stalks == sheafTwo.edge_stalks
-    @test sheafOne.coboundary == sheafTwo.coboundary
+    @test (sheafOne.vertex_stalks == sheafTwo.vertex_stalks &&
+     sheafOne.edge_stalks == sheafTwo.edge_stalks &&
+     sheafOne.coboundary == sheafTwo.coboundary)
 end
+
+### Functionality Tests ###
 
 # Triangle Sheaf for Consensus
 A = [1 0 0 0]
 B = [1 0 0 0]
 C = [1 0 0 0]
 
-# Macro
-test = @cellular_sheaf A, B, C begin
+macro_result = @cellular_sheaf A, B, C begin
     x::Stalk{4}, y::Stalk{4}, z::Stalk{4}
 
     A(x) == B(y)
@@ -23,20 +24,19 @@ test = @cellular_sheaf A, B, C begin
 
 end
 
-# Functions
-c = CellularSheaf([4, 4, 4], [1, 1, 1])
-set_edge_maps!(c, 1, 2, 1, A, B)
-set_edge_maps!(c, 1, 3, 2, A, C)
-set_edge_maps!(c, 2, 3, 3, B, C)
+func_result = CellularSheaf([4, 4, 4], [1, 1, 1])
+set_edge_maps!(func_result, 1, 2, 1, A, B)
+set_edge_maps!(func_result, 1, 3, 2, A, C)
+set_edge_maps!(func_result, 2, 3, 3, B, C)
 
 # Test
-isEqual(test, c)
+isEqual(macro_result, func_result)
 
 # Formation Sheaf
 A = [1 0 0 0; 0 0 1 0]
 B = [1 0 0 0; 0 0 1 0]
 
-test = @cellular_sheaf A, B begin
+macro_result = @cellular_sheaf A, B begin
     x::Stalk{4}, y::Stalk{4}, z::Stalk{4}
 
     A(x) == B(y)
@@ -44,12 +44,14 @@ test = @cellular_sheaf A, B begin
 
 end
 
-c = CellularSheaf([4, 4, 4], [2, 2])
-set_edge_maps!(c, 1, 2, 1, A, B)
-set_edge_maps!(c, 1, 3, 2, A, B)
+func_result = CellularSheaf([4, 4, 4], [2, 2])
+set_edge_maps!(func_result, 1, 2, 1, A, B)
+set_edge_maps!(func_result, 1, 3, 2, A, B)
 
 # Test
-isEqual(test, c)
+isEqual(macro_result, func_result)
+
+### Parse Error Handling ###
 
 # Testing for malformed line
 A = [1 0 0 0]
