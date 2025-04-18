@@ -129,3 +129,14 @@ C = [1 0 0 0]
     B(y) == C(z)
 
 end
+
+# Test
+
+@test_throws ErrorException("No restriction maps were passed into the macro.") @macroexpand @cellular_sheaf begin
+    x::Stalk{4}, y::Stalk{4}, z::Stalk{4}
+
+    A(x) == B(y)
+    A(x) == C(z)
+    B(y) == C(z)
+
+end

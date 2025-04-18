@@ -60,6 +60,12 @@ macro cellular_sheaf(expr...)
     local_vars = expr[1:end - 1] # Get local vars passed in as parameters
     block = expr[end] # Get macro code
 
+    # Confirm arguments were passed in:
+    if isempty(local_vars)
+        error("No restriction maps were passed into the macro.")
+    end
+
+    # Declare variables for storing argument values
     esc_vals = nothing
     names = nothing
 
@@ -76,7 +82,6 @@ macro cellular_sheaf(expr...)
     end
 
     return :(parse_cellular_sheaf(($(esc_vals...)), ($(names...)), $(Meta.quot(block))))
-
 end
 
 function parse_cellular_sheaf(local_vals::Any, local_names::Expr, block::Expr)
